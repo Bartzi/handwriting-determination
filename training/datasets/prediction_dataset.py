@@ -6,12 +6,18 @@ from utils.bbox.bbox import AxisAlignedBBox
 from utils.datatypes import Size
 
 
-class PredictionDatasetMixin(BaseImageDataset):
+class PredictionDatasetMixin:
 
     def __init__(self, *args, **kwargs):
         kwargs['resize_after_load'] = False
         kwargs['transform_probability'] = 0
+
+        image_size = kwargs.pop('image_size')
+        if not isinstance(image_size, Size):
+            image_size = Size(*image_size)
+
         self.max_size = kwargs.pop('max_size')
+        self.image_size = image_size
         self.binarize_windows = kwargs.pop('binarize_windows', False)
         self.threshold_method = kwargs.pop('threshold_method', 'otsu')
 
