@@ -9,6 +9,13 @@ Code for the Paper "Synthetic Data for the Analysis of Archival Documents: Handw
 1. install all requirements with `pip install -r requirements.txt`
 1. You should be ready to go!
 
+### Docker
+
+You can also use Docker to run the project:
+1. clone the repository 
+1. run `docker build -t <name> .`
+1. done
+
 ## Data Preparation
 
 We provide our data generation tool (in the `data_generation` directory) and also information on how to get all
@@ -69,6 +76,19 @@ run evaluation on multiple datasets.
 false positives, true positives, or all results.
 - `--render-negatives`: render regions only renders the confidence for positive decisions, if you want to render 
 confidence for negative decisions, use this flag.
+  
+# Analysis of Multiple Images
+
+If you want to analyse whether images contain handwriting or not, you can use the script `analyse_images.py` in the `training` directory.
+You can run it like so:
+
+`python analyse_images.py /data/images /data/model/HandwritingNet_250000.npz`
+
+Where `/data/images` is the path to the dir where your images are and `/data/model/HandwritingNet_250000.npz` is the path of the model
+you want to evaluate.
+You can check further options with `-h`.
+Please note, this script only works with a GPU in your server and automatically determines the number of GPUs it uses.
+If you want to control the GPUs used by the script, just set the environment variable `CUDA_VISIBLE_DEVICES`.
 
 # Citation
 
