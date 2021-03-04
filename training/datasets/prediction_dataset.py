@@ -21,7 +21,7 @@ class PredictionDatasetMixin:
         self.binarize_windows = kwargs.pop('binarize_windows', False)
         self.threshold_method = kwargs.pop('threshold_method', 'otsu')
 
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     @staticmethod
     def get_num_windows_and_overlap(input_dimension, output_dimension):

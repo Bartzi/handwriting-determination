@@ -3,9 +3,11 @@ import json
 import multiprocessing
 from concurrent.futures._base import as_completed
 from concurrent.futures.process import ProcessPoolExecutor
+from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
 
 import chainer
+import cv2
 import numpy
 from PIL import Image
 from chainer import Chain
@@ -27,9 +29,10 @@ def is_image(file_name: Path) -> bool:
 
 class Analyzer:
 
-    def __init__(self, model_path: Path, max_num_workers: int):
+    def __init__(self, model_path: Path, max_num_workers: int, needs_patches: bool = True):
         self.model_path = model_path
         self.max_num_workers = max_num_workers
+        self.needs_patches = needs_patches
 
         log_file = self.model_path.parent / 'log'
 
@@ -67,7 +70,11 @@ class Analyzer:
         return net
 
     def evaluate_image(self, image: numpy.ndarray, device_id: int) -> bool:
-        patches, bboxes = self.prediction_helper.create_sliding_window(image)
+        if self.needs_patches:
+            patches, bboxes = self.prediction_helper.create_sliding_window(image)
+        else:
+            patches = image[numpy.newaxis, ...]
+
         network = self.networks[device_id]
         device = chainer.get_device(network.device)
 
@@ -89,8 +96,11 @@ class Analyzer:
     def analyse(self, image_path: Path, idx: int, file_name: str) -> dict:
         with Image.open(str(image_path)) as image:
             image = image.convert('L').convert('RGB')
+            if not self.needs_patches:
+                image = image.resize(self.prediction_helper.image_size)
             image = numpy.array(image, dtype=chainer.get_dtype()).transpose(2, 0, 1)
-            image = self.prediction_helper.resize_image(image)
+            if self.needs_patches:
+                image = self.prediction_helper.resize_image(image)
             image /= 255
 
             has_handwriting = self.evaluate_image(image, idx)
@@ -110,10 +120,11 @@ def main(args):
     analyzed_images = []
     num_available_devices = chainer.backends.cuda.cupy.cuda.runtime.getDeviceCount()
     max_num_workers = max(num_available_devices, 1)
-    analyser = Analyzer(model_path, max_num_workers)
+    analyser = Analyzer(model_path, max_num_workers, needs_patches=not args.no_split)
     ctx = multiprocessing.get_context('forkserver')
 
-    with ProcessPoolExecutor(max_workers=max_num_workers, mp_context=ctx) as executor:
+    # with ProcessPoolExecutor(max_workers=max_num_workers, mp_context=ctx) as executor:
+    with ThreadPoolExecutor(max_workers=max_num_workers) as executor:
         current_jobs = []
         for i, image_path in enumerate(image_paths):
             submitted_job = executor.submit(analyser.analyse, image_path, i % max_num_workers, str(image_path.relative_to(root_dir)))
@@ -138,5 +149,6 @@ if __name__ == "__main__":
     parser.add_argument("root_dir", help="path to dir to analyse")
     parser.add_argument('model', help="model to load")
     parser.add_argument("--max-size", type=int, default=2000, help="max size of input before splitting into patches")
+    parser.add_argument("--no-split", action='store_true', default=False, help="do not split input image into individual patches")
 
     main(parser.parse_args())
