@@ -58,7 +58,12 @@ class Analyzer:
     def load_network(self, device_id) -> Chain:
         net_class = restore_backup(self.log_data['net'], '.')
         net = net_class()
-        net.to_device(device_id)
+
+        with numpy.load(str(self.model_path)) as f:
+            chainer.serializers.NpzDeserializer(f, strict=True).load(net)
+
+        net = net.to_device(device_id)
+
         return net
 
     def evaluate_image(self, image: numpy.ndarray, device_id: int) -> bool:
