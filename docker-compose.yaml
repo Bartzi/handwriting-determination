@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq
+    hostname: broker
+    ports:
+      - "5672:5672"
+  determination:
+    build: .
+    command: sh -c '/opt/wait-for rabbitmq:5672 -- celery -A tasks worker'
+    volumes:
+      - ./training:/app
+      - /home/christian/workspace/WPI/handwriting-determination:/data
+    environment:
+      - BROKER_ADDRESS=rabbitmq
+      - DETERMINATION_MODEL_PATH=/data/model/HandwritingNet_290000.npz
+    depends_on:
+      - rabbitmq
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: all
+            capabilities: [compute, utility]

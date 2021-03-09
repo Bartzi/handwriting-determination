@@ -24,4 +24,4 @@ tensorboardX
 tifffile
 tqdm
 typing-extensions
-pika
+celery
