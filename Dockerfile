@@ -29,9 +29,9 @@ RUN mkdir -p ${BASE}
 
 RUN pip3 install cupy-cuda111
 
-ARG WAIT_DIR=/opt
+ARG WAIT_DIR=/opt/wait-for
 
-RUN git clone https://github.com/eficode/wait-for.git /opt
+RUN git clone https://github.com/eficode/wait-for.git ${WAIT_DIR}
 RUN chmod +x ${WAIT_DIR}/wait-for
 
 COPY requirements_docker.txt ${BASE}/requirements.txt
