@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-dev \
     libgl1-mesa-glx \
-    libgl1
+    libgl1 \
+    netcat
 
 RUN pip3 install cython
 
@@ -27,6 +28,12 @@ ARG BASE=/app
 RUN mkdir -p ${BASE}
 
 RUN pip3 install cupy-cuda111
+
+ARG WAIT_DIR=/opt
+
+RUN git clone https://github.com/eficode/wait-for.git /opt
+RUN chmod +x ${WAIT_DIR}/wait-for
+
 COPY requirements_docker.txt ${BASE}/requirements.txt
 
 WORKDIR ${BASE}
