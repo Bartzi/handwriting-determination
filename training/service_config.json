@@ -1,5 +1,0 @@
-{
-  "max_size": 2000,
-  "device": 0,
-  "model_path": "../model/HandwritingNet_290000.npz"
-}

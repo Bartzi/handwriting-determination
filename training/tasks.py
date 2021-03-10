@@ -17,42 +17,17 @@ class AnalysisTask(celery.Task):
 
     def __init__(self):
         sys.path.append(str(Path(__file__).resolve().parent))
-        self.config = self.load_config()
-        self.config['model_path'] = os.environ.get('DETERMINATION_MODEL_PATH', self.config['model_path'])
-        print(self.config)
+        self.config = {
+            'model_path': os.environ.get('DETERMINATION_MODEL_PATH', None),
+            'device_id': int(os.environ.get('DETERMINATION_DEVICE', -1))
+        }
+        assert self.config['model_path'] is not None, "You must supply a model in the environment variable DETERMINATION_MODEL_PATH"
         self.analyzer = None
 
     def initialize(self):
         if self.analyzer is not None:
             return
         self.analyzer = Analyzer(Path(self.config['model_path']), self.config['device'], needs_patches=True)
-
-    def load_config(self) -> dict:
-        with open('service_config.json') as f:
-            config = json.load(f)
-        return config
-
-    # def run(self, task_data):
-    #     image = base64.b85decode(task_data)
-    #     io = BytesIO(image)
-    #     io.seek(0)
-    #
-    #     with Image.open(io) as the_image:
-    #         analyzed_boxes = self.analyzer.get_analysis_grid(the_image)
-    #
-    #     return json.dumps(analyzed_boxes)
-
-# parser = argparse.ArgumentParser(description="run a service that takes images as inputs and returns analysis results")
-# parser.add_argument('model', help="model to load")
-# parser.add_argument("--max-size", type=int, default=2000, help="max size of input before splitting into patches")
-# parser.add_argument("-d", "--device", default='@numpy', help="device to run on")
-# parser.add_argument("-a", "--amqp-host", default='localhost', help="address of the messagequeue host to connect to")
-#
-# args = parser.parse_args()
-#
-# model_path = Path(args.model)
-# device_id = -1 if args.device == '@numpy' else 1
-# analyzer = Analyzer(model_path, device_id, needs_patches=True)
 
 
 broker_address = os.environ.get('BROKER_ADDRESS', 'localhost')
