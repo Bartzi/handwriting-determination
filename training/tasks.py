@@ -21,13 +21,14 @@ class AnalysisTask(celery.Task):
             'model_path': os.environ.get('DETERMINATION_MODEL_PATH', None),
             'device_id': int(os.environ.get('DETERMINATION_DEVICE', -1))
         }
+        print(self.config)
         assert self.config['model_path'] is not None, "You must supply a model in the environment variable DETERMINATION_MODEL_PATH"
         self.analyzer = None
 
     def initialize(self):
         if self.analyzer is not None:
             return
-        self.analyzer = Analyzer(Path(self.config['model_path']), self.config['device'], needs_patches=True)
+        self.analyzer = Analyzer(Path(self.config['model_path']), self.config['device_id'], needs_patches=True)
 
 
 broker_address = os.environ.get('BROKER_ADDRESS', 'localhost')
