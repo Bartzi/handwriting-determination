@@ -13,6 +13,8 @@ from chainer.dataset import concat_examples
 from datasets.prediction_dataset import PredictionDatasetMixin
 from utils.backup import restore_backup
 
+from utils.bbox.bbox import AxisAlignedBBox
+
 Image.init()
 
 
@@ -101,7 +103,16 @@ class Analyzer:
         image /= 255
         return image
 
-    def get_analysis_grid(self, image: ImageClass) -> List[dict]:
+    def normalize_box(self, box: AxisAlignedBBox, image_width: int, image_height: int) -> numpy.ndarray:
+        normalized_box = AxisAlignedBBox(
+            box.left / image_width,
+            box.top / image_height,
+            box.right / image_width,
+            box.bottom / image_height
+        )
+        return normalized_box
+
+    def get_analysis_grid(self, image: ImageClass, normalize_boxes: bool = False) -> List[dict]:
         assert self.needs_patches, "Can not return box grid if no patches are cropped"
         image = self.prepare_image(image)
 
@@ -109,7 +120,7 @@ class Analyzer:
         analysed = [
             {
                 "has_handwriting": bool(handwriting_decision),
-                "box": box
+                "box": self.normalize_box(box, image.shape[-1], image.shape[-2]) if normalize_boxes else box
             }
             for handwriting_decision, box in zip(has_handwriting, boxes)
         ]
