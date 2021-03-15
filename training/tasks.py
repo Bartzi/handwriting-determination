@@ -32,7 +32,7 @@ class AnalysisTask(celery.Task):
 
 
 broker_address = os.environ.get('BROKER_ADDRESS', 'localhost')
-app = Celery('determination', backend='rpc://', broker=f"pyamqp://guest@{broker_address}//")
+app = Celery('wpi_demo', backend='rpc://', broker=f"pyamqp://guest@{broker_address}//")
 
 
 @app.task(name='handwriting_determination', base=AnalysisTask)
@@ -43,6 +43,7 @@ def analyze(task_data):
     io.seek(0)
 
     with Image.open(io) as the_image:
+        the_image = the_image.convert('RGB')
         analyzed_boxes = analyze.analyzer.get_analysis_grid(the_image, normalize_boxes=True)
 
     return analyzed_boxes
