@@ -8,6 +8,7 @@ imageio
 imgaug
 kiwisolver
 matplotlib
+msgpack
 networkx
 numpy
 opencv-python
